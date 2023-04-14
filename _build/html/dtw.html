@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>1.4. Dynamic Time Warping (DTW) for radio signals &#8212; Deva&#39;s book</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dtw';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="1. Notebooks with MyST Markdown" href="markdown-notebooks.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="intro.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="intro.html">
+                    About me
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Graphs</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">1. Markdown Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks.html">2. Jupyter Notebook files</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Time series</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="markdown-notebooks.html">1. Notebooks with MyST Markdown</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">1.4. Dynamic Time Warping (DTW) for radio signals</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/executablebooks/jupyter-book" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/executablebooks/jupyter-book/issues/new?title=Issue%20on%20page%20%2Fdtw.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/dtw.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Dynamic Time Warping (DTW) for radio signals</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="dynamic-time-warping-dtw-for-radio-signals">
+<h1><span class="section-number">1.4. </span>Dynamic Time Warping (DTW) for radio signals<a class="headerlink" href="#dynamic-time-warping-dtw-for-radio-signals" title="Permalink to this heading">#</a></h1>
+<p>Created: September 19, 2022 10:45 AM
+Created by: devakanth kalapati
+Email: devakanthkalapati&#64;gmail.com
+Materials: https://www.cs.unm.edu/~mueen/DTW.pdf, https://www.irit.fr/~Julien.Pinquier/Docs/TP_MABS/res/dtw-sakoe-chiba78.pdf, https://dspace.mit.edu/bitstream/handle/1721.1/27909/07888629-MIT.pdf?sequence=2&amp;isAllowed=y, http://languagelog.ldc.upenn.edu/myl/KruskalLiberman1983.pdf, https://arxiv.org/abs/1512.03216, https://www.audiolabs-erlangen.de/content/05-fau/professor/00-mueller/03-publications/2007_Mueller_DTW-Chapter04-IR_Springer.pdf, https://www-l2ti.univ-paris13.fr/~dauphin/Rabiner93.pdf
+Type: Analysis</p>
+<aside>
+💡 A time series is a collection of observations made sequentially in time.
+</aside>
+<p>Timeseries is mostly about visual inspections and intuitions. For example, below we can observe that 2 signals are distorted from the norm or its usual behavior which is observed by plotting the signals. We can recognize this and possibly diagnose the issue.</p>
+<p><img alt="A group of RSSI curves captured from a radio device" src="_images/Untitled.png" /></p>
+<p>A group of RSSI curves captured from a radio device</p>
+<p>Many types of data that are not true timeseries can also be translated or converted into timeseries. Examples: Handwriting, Shapes etc..</p>
+<p><img alt="Creating a time series from a shape descriptor" src="dtw_images/Untitled%201.png" /></p>
+<p>Creating a time series from a shape descriptor</p>
+<p><img alt="Creating a time series from hand writing" src="_images/Screenshot_2022-09-20_at_11.18.09.png" /></p>
+<p>Creating a time series from hand writing</p>
+<p>Lets say we have a bunch of timeseries of specific shapes and of different lengths. The goal is to cluster them or match them based on the similarity between them.</p>
+<p>One simple way is to compute the Euclidean distance between 2 different timeseries and if the distance is Low, you map them together because they are similar. This is generally not an efficient way to match the timeseries as often we have a varying difference in time (occurrence of a data point) and space (phase variation and length).</p>
+<p>Without considering the time invariance, we are prone to very poor results. As shown below, any distance measure which maps the $i$th point of one timeseries to the  $i$th point of another timeseries is a wrong comparison, even though the shape of the sequences are similar.</p>
+<p><img alt="Point to point comparison of RSSI curves using Euclidean distance" src="dtw_images/Untitled%202.png" /></p>
+<p>Point to point comparison of RSSI curves using Euclidean distance</p>
+<p>Most often the time series we are dealing with have properties that are significant and specific to a well known characteristic. In the case of signal capture from the radio device, the maxima is one such feature which helps in localizing the position of the device. Such significant features can be used to model our problem of shifting the curves in space to drop any phase variation impacting our analysis. Below is one such method which uses the maximas or peaks of the RSSI $[dBm]$ curves to shift the curves by creating a landmark.</p>
+<p><img alt="Landmark shifting" src="dtw_images/Untitled%203.png" /></p>
+<p>Landmark shifting</p>
+<p><img alt="Curves shifted using landmark shifting" src="dtw_images/Untitled%204.png" /></p>
+<p>Curves shifted using landmark shifting</p>
+<p><img alt="RSSI curves shifted using the peak" src="dtw_images/Untitled%205.png" /></p>
+<p>RSSI curves shifted using the peak</p>
+<blockquote>
+<div><p><strong>This technique works tremendously well in the case of curves that have a well-defined peak. Nonetheless, since we are talking about radio devices, due to their digital nature and external factors acting upon them, the curves are noisy and exhibit high variation from one acquisition to another. True peak detection becomes a challenge using these sets of curves, which when shifted using the landmark shifting result in a misaligned set of sequences.</strong></p>
+</div></blockquote>
+<p><img alt="Untitled" src="dtw_images/Untitled%206.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%207.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%208.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%209.png" /></p>
+<aside>
+💡 A non-linear alignment results in a more intuitive comparison by matching similar shapes even if they are out of phase.
+</aside>
+<p>DTW designed by Sakoe and Chiba consists of a minimal-cost alignment problem and is solved efficiently via dynamic programming. It is parameter free/ parameter lite and robust to noise.</p>
+<p><img alt="Comparison of RSSI curves using DTW" src="dtw_images/Untitled%2010.png" /></p>
+<p>Comparison of RSSI curves using DTW</p>
+<blockquote>
+<div><p>Dynamic Time Warping (DTW) is an algorithm that helps in measuring the similarity between 2 timeseries which may vary in timing. Elimination of the fluctuation in phase by time normalization has resulted in a massive popularity of this technique in a wide variety of fields such as robotics**,** biometrics, medicine, metrology, bioinformatics, video games, gesture recognition, image processing, seismology, music processing, entomology, anthropology, computational photography, bioacoustics, finance ,…</p>
+</div></blockquote>
+<p>To align 2 different timeseries $<em>A≔ (a_1, a_2, a_3,…, a_N)</em>$ and $<em>B≔ (b_1, b_2, b_3, …, b_M)$</em> of length $N$ and $M$ respectively, create a matrix the size of $|N|$ by $|M|$. This is called a cost matrix, where each $(n^{th}, m^{th})$ element is the distance between each pair of the time series $A$ and $B$. The usual distance metric employed to calculate the distance between these pairwise elements is the Euclidean distance. Other distances can also be used such as Minkowski, Manhattan etc..</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2011.png" /></p>
+<p>$$
+\begin{gather}
+A= (a_1, a_2, a_3,…, a_N) \
+B= (b_1, b_2, b_3,…, b_M) \
+c(a_n,b_m) = (a_n-b_m)^2
+\end{gather}</p>
+<p>$$</p>
+<p>Every possible alignment is a path through the matrix from the beginning to the end of the matrix. To get the best alignment, we need to find a warping path $W$ that minimizes the distance between both the sequences.</p>
+<p>$$
+\begin{gather}
+W = (w_1,w_2,w_3,…,w_K)
+\end{gather}
+$$</p>
+<p>W is a sequence of grid points in the matrix, where each $w_k$ corresponds to a point $(i,j)_k$, that provides the alignment of $b_k$ with $a_k$. The dynamic programming approach is focused on finding the best path that minimizes the overall cost of alignment out of the numerous possible paths.</p>
+<p>$$
+\begin{gather}
+DTW(A,B) = min_W[\sum_{k=1} ^K(w_k)]
+\end{gather}
+$$</p>
+<p>Below is an example of the optimal alignment between the 2 sequences using DTW.</p>
+<p><a class="reference external" href="https://deva-k.github.io/">DTW alignment and cost matrix of 2 sequences</a></p>
+<p>DTW alignment and cost matrix of 2 sequences</p>
+<p><img alt="DTW alignment of 2 sequences" src="dtw_images/Untitled%2012.png" /></p>
+<p>DTW alignment of 2 sequences</p>
+<p>To find the minimum cost warping path, a naive function would be to compute every possible path which is combinatorially complex and computationaly explosive. To make the algorithm efficient, certain conditions are put in place to restrict the space of possible warping paths.</p>
+<ul>
+<li><p><strong>Monotonicity</strong></p>
+<p>The warping path points must be monotonically ordered. This means that the alignment path cannot go back in time. This also guarantees that we do not repeat the alignment for features that are similar.</p>
+<p>$$
+⁍
+$$</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2013.png" /></p>
+</li>
+<li><p><strong>Continuity</strong></p>
+<p>This makes sure that the steps in the grid are not skipped, so that we do not miss any important features.</p>
+<p>$$
+⁍
+$$</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2014.png" /></p>
+</li>
+<li><p><strong>Boundary conditions</strong></p>
+<p>This is a constraint on the tails or the end points of the sequences. To ensure that the alignment path does not consider any of the sequences partially, we start at the first point and end at the last point of both the sequences. This means that the start and end of the warping path is at the corner diagonally opposite to each other.</p>
+<p>$$
+⁍
+$$</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2015.png" /></p>
+  <aside>
+  💡 This condition can be relaxed in special cases by specifying the grids for allowed start points and endpoints. Useful when the tails of the curves are highly distorted.
+  </aside>
+</li>
+<li><p><strong>Warping window</strong></p>
+<p>The warping points can be constrained to fall into specific grids across the diagonal as a good alignment path is unlikely to be away from the diagonal.</p>
+<p>$$
+⁍
+$$</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2016.png" /></p>
+  <aside>
+  💡 When there is no time normalization needed, the warping path coincides to the diagonal of the matrix $i = j$.
+  </aside>
+</li>
+<li><p><strong>Slope constraint</strong></p>
+<p>To prevent matching short paths of sequences of one time series to very long paths of sequences in another, a slope constraint is set to avoid long movements in a specific direction.</p>
+</li>
+</ul>
+<p>Using the above constraints we formulate a recurrence relation by computing a accumulated cost matrix $D$ which consists of local cost measure for each cell. Each cell of $D$ is defined as the sum of distance between the current cells and the minimum of the local distance measure of the adjacent cells.</p>
+<p>$$
+\begin{gather}
+D(n,m) = c(a_n,b_n) + min[D(a_{n-1},b_{m-1}),D(a_{n-1},b_m),D(a_n,b_{m-1})]
+\end{gather}
+$$</p>
+<p>When computing the accumulated cost matrix $D$, we shall keep track of the adjacent cell which has minimum local cost measure for every $D(n,m)$. For example, $D(2,3)$ based on $(6)$ will have $D(1,3)$,$D(2,2)$ and $D(1,2)$ as adjacent cells or its neighbours.</p>
+<p>Later, the optimal warping path $W$ mentioned at $(4)$ can be traced in reverse order of indices from $D(n,m)$ to $D(0,0)$ using the following algorithm.</p>
+<p>$$
+W_{k-1} = \begin{align}
+\begin{cases}
+(1,m-1), &amp;\text{if } n=1 \
+(n-1,1), &amp;\text{if } m=1  \
+argmin{D(n − 1, m − 1),
+D(n − 1, m), D(n, m − 1)}, &amp;\text{otherwise}</p>
+<p>\end{cases}
+\end{align}
+$$</p>
+<aside>
+💡 In simple terms, the step pattern tells us whether to drop a point (horizontal move  $D(n − 1, m)$), insert a point (vertical move $D(n, m − 1)$) or match a point (diagonal move $D(n − 1, m − 1)$).
+</aside>
+<p>The following point should be emphasized: the technique for aligning two sequences using dynamic programming is based on this fundamental algorithm. This could also be referred to as naive DTW. Different variants of this algorithm can be developed by modifying certain conditions and parameters. However, implementing such modifications requires the ability to tailor them to the specific problem at hand.</p>
+<p>To begin with, lets consider a set of signals acquired from a specific radio device. The curves below have been captured by an onboard modem on the train when travelling in a respective direction.</p>
+<aside>
+💡 Remember that the signature of the signals change based on the direction of the train and the position of the onboard modem (front or back).
+</aside>
+<p><img alt="Untitled" src="dtw_images/Untitled%2017.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2018.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2019.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2020.png" /></p>
+<p>After inspection, it is observed that the RSSI curves exhibit several types of phase variation:</p>
+<ol class="arabic simple">
+<li><p>The curves are uniformly shifted to the left and right by a specific factor. This requires <strong>translation</strong> of the curves as in the case of landmark shifting.</p></li>
+<li><p><strong>Scale</strong> of the curves in some regions is either wide or narrow. This could be an artifact of the sampling rate or the speed of the train.</p></li>
+<li><p>Combining both 1 &amp; 2 it is clear that we require <strong>diffeomorphic</strong> transformation that reshapes the signals by preserving the smoothing and continuity of it while still retaining significant deformations.</p></li>
+<li><p>The signature of the signals vary and can also include flat portions. This could be an artifact of missing data/interpolation.</p></li>
+<li><p>Other observations such as different lengths, incomplete signals etc.</p></li>
+</ol>
+<ul class="simple">
+<li><p>To align a group of RSSI curves in a coordinate system, we need a reference abscissa and curve. For the given problem and cases considered, lets opt the curve with the longest range ($kp_{max} - kp_{min}$). This will allow to align curves without loss of RSSI values at the tails.</p></li>
+</ul>
+<p><img alt="Untitled" src="dtw_images/Untitled%2021.png" /></p>
+<ul class="simple">
+<li><p>Given that the RSSI is unevenly sampled, the next step is to interpolate it over a linearly spaced abscissa. This will help us retain visual shape and geometric features of the curves when put in comparison to match similar patterns using DTW.</p></li>
+</ul>
+<p><img alt="Untitled" src="dtw_images/Untitled%2022.png" /></p>
+<ul class="simple">
+<li><p>To ensure that we focus solely on the shape and not on offsets or variations, it is important to use differencing. It is simply the difference between consecutive observations. This technique allows us to eliminate trends, slopes, significant distortions, and temporal patterns. When working with radio devices, the signals may have fluctuations, deterioration, and other degradation-related characteristics, which makes it crucial to apply differencing. For the problem at hand, 1st order differencing of the signals has been executed. If necessary, smooth the resultant series with a infinite impulse response (IIR) filter. We shall look at examples of alignment with degradations in later sections and the impact of differencing.</p></li>
+</ul>
+<p>$$
+d’<em>t = d_t - d</em>{t-1}
+$$</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2023.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2024.png" /></p>
+<ul class="simple">
+<li><p>As mentioned earlier, we will tweak the naive DTW algorithm to our specific problem. Firstly, we change the continuity condition that is a step pattern. Drawback of the current step pattern is that the warping path can get stuck at one position, meaning one point being aligned to many consecutive points. To avoid such long horizontal and vertical movements, we can replace the step pattern in $(7)$ with $argmin{D(n − 1, m − 1), D(n − 2, m - 1), D(n - 1, m − 2)}$. Several other step patterns can be explored and used as per the requirements. The accumulated cost matrix $D$  in $(6)$ is now</p></li>
+</ul>
+<p>$$
+\begin{gather}
+D(n,m) = c(a_n,b_n) + min[D(a_{n-1},b_{m-1}),D(a_{n-2},b_{m-1}),D(a_{n-1},b_{m-2})]
+\end{gather}
+$$</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2025.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2026.png" /></p>
+<ul class="simple">
+<li><p>To favor horizontal, vertical or diagonal moves, we can add a weight vector with penalties for each move. Since one horizontal and one vertical move corresponds to a single diagonal move, a balance can be established by using a weight vector with penalties $(p_d,p_h,p_v)$. This method can be adapted for other step patterns. The recursion algorithm becomes</p></li>
+</ul>
+<p>$$
+D(n,m) = \begin{align}
+min\begin{cases}
+D(n − 1, m − 1) + p_d.c(a_n,a_m) \
+D(n − 2, m − 1) + p_h.c(a_n,a_m) \
+D(n − 1, m − 2) + p_v.c(a_n,a_m)
+\end{cases}
+\end{align}
+$$</p>
+<ul class="simple">
+<li><p>One can add global constraints on top of this to limit the amount of admissible warping paths, such as <em>sakoe-chiba</em> band or <em>itakura parallelogram</em>. This is done by simply restricting the warping path to travel in a specific zone or cells in $D$. The danger of this is that sometimes optimal warping path might lie outside the restricted zone.</p></li>
+<li><p>The boundary condition ensures that we align first and last points of both the sequences together. This results in global alignment. Since we are dealing with radio signals that have varying lengths, this condition results in undesirable alignment. <strong>This is the most crucial aspect of the entire problem</strong>. To ensure that we do not warp signals forcefully, we shall consider performing partial matching. On top of minimizing the cost function, we shall also maximize the lengths of the series that match. Given the fact that our reference is the largest curve out of the pool of curves, we can perform a combination of global and local alignment by omitting the boundary condition to find the alignment of the short curves with the reference curve.</p></li>
+</ul>
+<p><img alt="Untitled" src="dtw_images/Untitled%2027.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2028.png" /></p>
+<ul class="simple">
+<li><p>Finally, DTW can be applied on the series and reference obtained after differencing and above modifications. The resultant alignment path obtained for each series can be used to warp the actual signals to the reference abscissa in an iterative manner.</p></li>
+</ul>
+<p><img alt="Untitled" src="dtw_images/Untitled%2029.png" /></p>
+<p>Below are few examples of aligning a set of curves.</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2030.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2031.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2032.png" /></p>
+<p>Below are examples after adding a set of degradations and the impact of differencing on two sample curves.</p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2033.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2034.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2035.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2036.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2037.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2038.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2039.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2040.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2041.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2042.png" /></p>
+<blockquote>
+<div><p><strong>The proposed solution would result in undesirable alignment without differencing. Below are the results of using DTW on the sample curves used above with degradations and temporal deformations without differencing.</strong></p>
+</div></blockquote>
+<p><img alt="Untitled" src="dtw_images/Untitled%2043.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2044.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2045.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2046.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2047.png" /></p>
+<p><img alt="Untitled" src="dtw_images/Untitled%2048.png" /></p>
+<p>In some scenarios, the proposed alignment might not work as expected. But it is a powerful algorithm to avoid inconsistencies in analysis and computations caused by phase variability.</p>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="markdown-notebooks.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">1. </span>Notebooks with MyST Markdown</p>
+      </div>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Devakanth Kalapati
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
